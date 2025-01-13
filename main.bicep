@@ -109,7 +109,6 @@ module publicIP './publicIP.bicep' = {
   }
 }
 
-/*
 module ingressController './ingress.bicep' = {
   scope: resourceGroup
   name: ingressControllerName
@@ -122,4 +121,3 @@ module ingressController './ingress.bicep' = {
     backendIP: backendIP
   }
 }
-*/

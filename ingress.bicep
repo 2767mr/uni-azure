@@ -7,20 +7,37 @@ param publicIPId string
 param frontendPort int
 param backendIP string
 
-// this does not work, so disabled ingress controller for now
-param frontendIPConfigurationId string = newGuid()
-param frontendPortId string = newGuid()
-param httpListenerId string = newGuid()
-param backendAddressPoolId string = newGuid()
-param backendHttpSettingsId string = newGuid()
+resource policy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
+  name: '${ingressControllerName}policy'
+  location: location
+  properties: {
+    managedRules: {
+      managedRuleSets: [
+        {
+          ruleSetType:'OWASP'
+          ruleSetVersion: '3.2'
+        }
+      ]
+    }
+    policySettings: {
+      mode: 'Detection'
+      state: 'Enabled'
+      fileUploadLimitInMb: 100
+      requestBodyCheck: true
+      maxRequestBodySizeInKb: 128
+    }
+  }
+}
 
 resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = {
   name: ingressControllerName
   location: location
+  zones: ['1', '2', '3']
   properties: {
     sku: {
       name: 'WAF_v2'
       tier: 'WAF_v2'
+      family: 'Generation_1'
       capacity: 2
     }
     gatewayIPConfigurations: [
@@ -35,7 +52,6 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     frontendIPConfigurations: [
       {
-        id: frontendIPConfigurationId
         name: 'ingressControllerFrontendIp'
         properties: {
           publicIPAddress: {
@@ -46,7 +62,6 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     frontendPorts: [
       {
-        id: frontendPortId
         name: 'frontendPort'
         properties: {
           port: frontendPort
@@ -55,7 +70,6 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     backendAddressPools: [
       {
-        id: backendAddressPoolId
         name: 'backendPool'
         properties: {
           backendAddresses: [
@@ -68,7 +82,6 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     backendHttpSettingsCollection: [
       {
-        id: backendHttpSettingsId
         name: 'backendHttpSettings'
         properties: {
           port: frontendPort
@@ -80,14 +93,13 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     httpListeners: [
       {
-        id: httpListenerId
         name: 'httpListener'
         properties: {
           frontendIPConfiguration: {
-            id: frontendIPConfigurationId
+            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', ingressControllerName, 'ingressControllerFrontendIp')
           }
           frontendPort: {
-            id: frontendPortId
+            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', ingressControllerName, 'frontendPort')
           }
           protocol: 'Http'
         }
@@ -98,17 +110,22 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
         name: 'rule1'
         properties: {
           ruleType: 'Basic'
+          priority: 1
           httpListener: {
-            id: httpListenerId
+            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', ingressControllerName, 'httpListener')
           }
           backendAddressPool: {
-            id: backendAddressPoolId
+            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', ingressControllerName, 'backendPool')
           }
           backendHttpSettings: {
-            id: backendHttpSettingsId
+            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', ingressControllerName, 'backendHttpSettings')
           }
         }
       }
     ]
+    enableHttp2: true
+    firewallPolicy: {
+      id: policy.id
+    }
   }
 }
