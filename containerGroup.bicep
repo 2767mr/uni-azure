@@ -45,7 +45,7 @@ resource storageAccountFSShare 'Microsoft.Storage/storageAccounts/fileServices/s
   name: 'database'
   parent: storageAccountFS
   properties: {
-
+    enabledProtocols: 'NFS'
   }
 }
 
@@ -53,7 +53,13 @@ resource menv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   location: location
   name: 'menv'
   properties: {
-
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        sharedKey: logAnalyticsKey
+        customerId: logAnalyticsId
+      }
+    }
   }
 }
 
@@ -182,8 +188,10 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
       volumes: [
         {
           name: 'database-volume'
-          storageName: 'asdfstorage'
-          storageType: 'AzureFile'
+          // storageName: 'asdfstorage'
+          // storageType: 'AzureFile'
+          // mountOptions: 'uid=999,gid=999,dir_mode=0750,file_mode=0750,mfsymlinks,nobrl,cache=none'
+          storageType: 'EmptyDir'
         }
       ]
     }
