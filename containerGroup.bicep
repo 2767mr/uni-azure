@@ -33,16 +33,19 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   sku: {
     name: 'Standard_LRS'
   }
-  resource _ 'fileServices@2023-05-01' = {
-    name: 'default'
-    properties: {
-    }
-    resource share 'shares@2023-05-01' = {
-      name: 'database'
-      properties: {
+}
 
-      }
-    }
+resource storageAccountFS 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
+  name: 'default'
+  parent: storageAccount
+  properties: {}
+}
+
+resource storageAccountFSShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-05-01' = {
+  name: 'database'
+  parent: storageAccountFS
+  properties: {
+
   }
 }
 
@@ -52,16 +55,20 @@ resource menv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   properties: {
 
   }
+}
 
-  resource storage 'storages@2024-03-01' = {
-    name: 'asdfstorage'
-    properties: {
-      azureFile: {
-        shareName: 'database'
-        accountName: storageAccount.name
-        accountKey: storageAccount.listKeys().keys[0].value
-        accessMode: 'ReadWrite'
-      }
+resource storage 'Microsoft.App/managedEnvironments/storages@2024-03-01' = {
+  name: 'asdfstorage'
+  parent: menv
+  dependsOn: [
+    storageAccountFSShare
+  ]
+  properties: {
+    azureFile: {
+      shareName: 'database'
+      accountName: storageAccount.name
+      accountKey: storageAccount.listKeys().keys[0].value
+      accessMode: 'ReadWrite'
     }
   }
 }
@@ -130,6 +137,9 @@ resource backendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
 resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: databaseContainerName
   location: location
+  dependsOn: [
+    storage
+  ]
   properties: {
     environmentId: menv.id
     configuration: {
