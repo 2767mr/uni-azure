@@ -45,7 +45,7 @@ resource storageAccountFSShare 'Microsoft.Storage/storageAccounts/fileServices/s
   name: 'database'
   parent: storageAccountFS
   properties: {
-    enabledProtocols: 'NFS'
+    // enabledProtocols: 'NFS'
   }
 }
 
@@ -102,6 +102,10 @@ resource frontendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
         }
       ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
     }
   }
 }
@@ -130,11 +134,15 @@ resource backendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'DATABASE_URL'
-              value: 'postgres://${postgresUser}:${postgresPassword}@${postgresHost}:${postgresPort}/${postgresDatabase}'
+              value: 'postgres://${postgresUser}@${postgresHost}:${postgresPort}/${postgresDatabase}'
             }
           ]
         }
       ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
     }
   }
 }
@@ -169,8 +177,8 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: postgresUser
             }
             {
-              name: 'POSTGRES_PASSWORD'
-              value: postgresPassword
+              name: 'POSTGRES_HOST_AUTH_METHOD'
+              value: 'trust'
             }
             {
               name: 'POSTGRES_DB'
@@ -180,11 +188,16 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
           volumeMounts: [
             {
               volumeName: 'database-volume'
-              mountPath: '/var/lib/postgresql/data'
+              // mountPath: '/var/lib/postgresql/data'
+              mountPath: '/tmp/test'
             }
           ]
         }
       ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
       volumes: [
         {
           name: 'database-volume'

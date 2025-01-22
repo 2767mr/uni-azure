@@ -8,25 +8,25 @@ param cpu int = 1
 param memoryGB int = 2
 
 param frontendContainerName string = 'frontend'
-param frontendContainerImage string = 'git.mascherbauer.com/dominik/demo-frontend'
-param frontendPort int = 8080
+param frontendContainerImage string = 'ghcr.io/dominikmascherbauer/demo-frontend'
+param frontendPort int = 80
 
-param backendContainerName string = 'backend'
+param backendContainerName string = 'tiles'
 param backendContainerImage string = 'ghcr.io/maplibre/martin'
 param backendPort int = 3000
 
 param databaseContainerName string = 'database'
-param databaseContainerImage string = 'git.mascherbauer.com/dominik/demo-db'
+param databaseContainerImage string = 'ghcr.io/dominikmascherbauer/demo-db'
 param databasePort int = 5432
 
-param postgresUser string = 'admin'
+param postgresUser string = 'postgres'
 @secure()
 param postgresPassword string = newGuid()
-param postgresDatabase string = 'demo-db'
+param postgresDatabase string = 'db'
 param postgresHost string = databaseContainerName
 param postgresPort int = 5432
 
-param storageAccountName string = 'azureuniquedbstorage1337'
+param storageAccountName string = 'azureuniquedbstorage1338'
 
 param networkSecurityGroupName string = 'network-security'
 param internalSourceAddressPrefix string = '10.0.0.0/24'
