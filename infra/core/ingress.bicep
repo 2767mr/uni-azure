@@ -1,13 +1,37 @@
-param ingressControllerName string
+@description('Location of the ingress.')
 param location string
 
-param ingressControllerSubnetId string
-param publicIPId string
+/* ingress parameters */
+@description('Name of the ingress.')
+param ingressName string
 
+@description('Port exposed to the internet.')
+param frontendPort int
+/**************************************************/
+
+/* Dependencies */
+@description('Id of the ingress subnet.')
+param ingressSubnetId string
+
+@description('Fully qualified domain name of the exposed applciation.')
 param backendFQDN string
+/**************************************************/
+
+
+resource publicIP 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+  name: 'public-ip'
+  location: location
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+  sku: { name:'Standard', tier:'Regional' }
+  zones: [
+    '1','2', '3'
+  ]
+}
 
 resource policy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
-  name: '${ingressControllerName}policy'
+  name: '${ingressName}-policy'
   location: location
   properties: {
     managedRules: {
@@ -28,8 +52,8 @@ resource policy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolic
   }
 }
 
-resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = {
-  name: ingressControllerName
+resource ingress 'Microsoft.Network/applicationGateways@2024-05-01' = {
+  name: ingressName
   location: location
   zones: ['1', '2', '3']
   properties: {
@@ -41,35 +65,35 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     }
     gatewayIPConfigurations: [
       {
-        name: 'ingressControllerIpConfig'
+        name: 'ingress-ip-config'
         properties: {
           subnet: {
-            id: ingressControllerSubnetId
+            id: ingressSubnetId
           }
         }
       }
     ]
     frontendIPConfigurations: [
       {
-        name: 'ingressControllerFrontendIp'
+        name: 'frontend-ip-config'
         properties: {
           publicIPAddress: {
-            id: publicIPId
+            id: publicIP.id
           }
         }
       }
     ]
     frontendPorts: [
       {
-        name: 'frontendPort'
+        name: 'frontend-port'
         properties: {
-          port: 80
+          port: frontendPort
         }
       }
     ]
     backendAddressPools: [
       {
-        name: 'backendPool'
+        name: 'backend-pool'
         properties: {
           backendAddresses: [
             {
@@ -95,7 +119,7 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
     ]
     backendHttpSettingsCollection: [
       {
-        name: 'backendHttpSettings'
+        name: 'backend-http-settings'
         properties: {
           port: 443
           protocol: 'Https'
@@ -103,20 +127,20 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
           cookieBasedAffinity: 'Disabled'
           requestTimeout: 20
           probe: {
-            id: resourceId('Microsoft.Network/applicationGateways/probes', ingressControllerName, 'frontend-probe')
+            id: resourceId('Microsoft.Network/applicationGateways/probes', ingressName, 'frontend-probe')
           }
         }
       }
     ]
     httpListeners: [
       {
-        name: 'httpListener'
+        name: 'http-listener'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', ingressControllerName, 'ingressControllerFrontendIp')
+            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', ingressName, 'frontend-ip-config')
           }
           frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', ingressControllerName, 'frontendPort')
+            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', ingressName, 'frontend-port')
           }
           protocol: 'Http'
         }
@@ -129,13 +153,13 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
           ruleType: 'Basic'
           priority: 1
           httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', ingressControllerName, 'httpListener')
+            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', ingressName, 'http-listener')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', ingressControllerName, 'backendPool')
+            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', ingressName, 'backend-pool')
           }
           backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', ingressControllerName, 'backendHttpSettings')
+            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', ingressName, 'backend-http-settings')
           }
         }
       }
