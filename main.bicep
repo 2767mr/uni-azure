@@ -5,7 +5,7 @@ param logAnalyticsName string = 'log-analytics'
 
 param containerGroupName string = 'services'
 param cpu int = 1
-param memoryGB int = 2
+// param memoryGB int = 2
 
 param frontendContainerName string = 'frontend'
 param frontendContainerImage string = 'ghcr.io/2767mr/demo-frontend'
@@ -65,7 +65,7 @@ module containerGroup './containerGroup.bicep' = {
     logAnalyticsId: logAnalytics.outputs.logAnalyticsId
     logAnalyticsKey : logAnalytics.outputs.logAnalyticKey
     cpu: cpu
-    memoryGB: memoryGB
+    // memoryGB: memoryGB
     frontendContainerName: frontendContainerName
     frontendContainerImage: frontendContainerImage
     frontendPort: frontendPort
