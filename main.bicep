@@ -8,7 +8,7 @@ param cpu int = 1
 param memoryGB int = 2
 
 param frontendContainerName string = 'frontend'
-param frontendContainerImage string = 'ghcr.io/dominikmascherbauer/demo-frontend'
+param frontendContainerImage string = 'ghcr.io/2767mr/demo-frontend'
 param frontendPort int = 80
 
 param backendContainerName string = 'tiles'
