@@ -118,8 +118,10 @@ resource backendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
     environmentId: menv.id
     configuration: {
       ingress: {
-        external: true
+        external: false
         targetPort: backendPort
+        exposedPort: backendPort
+        transport: 'tcp'
       }
     }
     template: {
@@ -134,7 +136,7 @@ resource backendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'DATABASE_URL'
-              value: 'postgres://${postgresUser}@${postgresHost}:${postgresPort}/${postgresDatabase}'
+              value: 'postgres://${postgresUser}:${postgresPassword}@${postgresHost}:${postgresPort}/${postgresDatabase}'
             }
           ]
         }
@@ -158,8 +160,10 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
     environmentId: menv.id
     configuration: {
       ingress: {
-        external: true
+        external: false
         targetPort: databasePort
+        exposedPort: databasePort
+        transport: 'tcp'
       }
     }
     template: {
@@ -177,8 +181,8 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: postgresUser
             }
             {
-              name: 'POSTGRES_HOST_AUTH_METHOD'
-              value: 'trust'
+              name: 'POSTGRES_PASSWORD'
+              value: postgresPassword
             }
             {
               name: 'POSTGRES_DB'
