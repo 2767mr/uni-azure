@@ -3,7 +3,7 @@ param logAnalyticsId string
 param logAnalyticsKey string
 
 param cpu int
-param memoryGB int
+// param memoryGB int
 
 param frontendContainerName string
 param frontendContainerImage string
@@ -25,6 +25,7 @@ param postgresHost string
 param postgresPort int
 
 param storageAccountName string
+param appGatewaySubnetId string
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName 
@@ -59,6 +60,10 @@ resource menv 'Microsoft.App/managedEnvironments@2024-03-01' = {
         sharedKey: logAnalyticsKey
         customerId: logAnalyticsId
       }
+    }
+    vnetConfiguration: {
+      internal: false
+      infrastructureSubnetId: appGatewaySubnetId
     }
   }
 }
@@ -189,28 +194,29 @@ resource databaseContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: postgresDatabase
             }
           ]
-          volumeMounts: [
-            {
-              volumeName: 'database-volume'
-              // mountPath: '/var/lib/postgresql/data'
-              mountPath: '/tmp/test'
-            }
-          ]
+          // volumeMounts: [
+          //   {
+          //     volumeName: 'database-volume'
+          //     // mountPath: '/var/lib/postgresql/data'
+          //     mountPath: '/tmp/test'
+          //   }
+          // ]
         }
       ]
       scale: {
         minReplicas: 1
         maxReplicas: 1
       }
-      volumes: [
-        {
-          name: 'database-volume'
-          // storageName: 'asdfstorage'
-          // storageType: 'AzureFile'
-          // mountOptions: 'uid=999,gid=999,dir_mode=0750,file_mode=0750,mfsymlinks,nobrl,cache=none'
-          storageType: 'EmptyDir'
-        }
-      ]
+      // volumes: [
+      //   {
+      //     name: 'database-volume'
+      //     storageName: 'asdfstorage'
+      //     // storageType: 'AzureFile'
+      //     mountOptions: 'uid=999,gid=999,dir_mode=0750,file_mode=0750,mfsymlinks,nobrl,cache=none'
+      //     storageType: 'NfsAzureFile'
+
+      //   }
+      // ]
     }
   }
 }

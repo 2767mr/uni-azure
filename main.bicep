@@ -26,20 +26,20 @@ param postgresDatabase string = 'db'
 param postgresHost string = databaseContainerName
 param postgresPort int = 5432
 
-param storageAccountName string = 'azureuniquedbstorage1338'
+param storageAccountName string = 'azureuniquedbstorage1337'
 
 param networkSecurityGroupName string = 'network-security'
-param internalSourceAddressPrefix string = '10.0.0.0/24'
+param internalSourceAddressPrefix string = '10.0.0.0/23'
 
 param virtualNetworkName string = 'virtual-network'
 param addressSpacePrefix string = '10.0.0.0/16'
 param appGatewaySubnetName string = 'app-gateway-subnet'
-param appGatewaySubnetAddressPrefix string = '10.0.1.0/24'
+param appGatewaySubnetAddressPrefix string = '10.0.2.0/23'
 
 param publicIPName string = 'public-ip'
 
-param ingressControllerName string = 'ingress-controller'
-param backendIP string = '10.0.0.4' // Replace with your backend container IP
+// param ingressControllerName string = 'ingress-controller'
+// param backendIP string = '10.0.0.4' // Replace with your backend container IP
 
 targetScope = 'subscription'
 
@@ -81,6 +81,7 @@ module containerGroup './containerGroup.bicep' = {
     postgresHost: postgresHost
     postgresPort: postgresPort
     storageAccountName: storageAccountName
+    appGatewaySubnetId: virtualNetwork.outputs.appGatewaySubnetId
   }
 }
 
