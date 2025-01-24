@@ -34,11 +34,13 @@ param internalSourceAddressPrefix string = '10.0.0.0/23'
 param virtualNetworkName string = 'virtual-network'
 param addressSpacePrefix string = '10.0.0.0/16'
 param appGatewaySubnetName string = 'app-gateway-subnet'
-param appGatewaySubnetAddressPrefix string = '10.0.2.0/23'
+param appGatewaySubnetAddressPrefix string = '10.0.1.0/24'
+param appSubnetName string = 'app-subnet'
+param appSubnetAddressPrefix string = '10.0.2.0/23'
 
 param publicIPName string = 'public-ip'
 
-// param ingressControllerName string = 'ingress-controller'
+param ingressControllerName string = 'ingress-controller'
 // param backendIP string = '10.0.0.4' // Replace with your backend container IP
 
 targetScope = 'subscription'
@@ -81,7 +83,7 @@ module containerGroup './containerGroup.bicep' = {
     postgresHost: postgresHost
     postgresPort: postgresPort
     storageAccountName: storageAccountName
-    appGatewaySubnetId: virtualNetwork.outputs.appGatewaySubnetId
+    appGatewaySubnetId: virtualNetwork.outputs.appSubnetId
   }
 }
 
@@ -107,6 +109,8 @@ module virtualNetwork './virtualNetwork.bicep' = {
     addressSpacePrefix: addressSpacePrefix
     appGatewaySubnetName: appGatewaySubnetName
     appGatewaySubnetAddressPrefix: appGatewaySubnetAddressPrefix
+    appSubnetName: appSubnetName
+    appSubnetAddressPrefix: appSubnetAddressPrefix
   }
 }
 
@@ -119,15 +123,14 @@ module publicIP './publicIP.bicep' = {
   }
 }
 
-// module ingressController './ingress.bicep' = {
-//   scope: resourceGroup
-//   name: ingressControllerName
-//   params: {
-//     ingressControllerName: ingressControllerName
-//     location: location
-//     ingressControllerSubnetId: virtualNetwork.outputs.appGatewaySubnetId
-//     publicIPId: publicIP.outputs.publicIPId
-//     frontendPort: frontendPort
-//     backendIP: backendIP
-//   }
-// }
+module ingressController './ingress.bicep' = {
+  scope: resourceGroup
+  name: ingressControllerName
+  params: {
+    ingressControllerName: ingressControllerName
+    location: location
+    ingressControllerSubnetId: virtualNetwork.outputs.appGatewaySubnetId
+    publicIPId: publicIP.outputs.publicIPId
+    backendFQDN: containerGroup.outputs.frontendFQDN
+  }
+}

@@ -4,8 +4,7 @@ param location string
 param ingressControllerSubnetId string
 param publicIPId string
 
-param frontendPort int
-param backendIP string
+param backendFQDN string
 
 resource policy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
   name: '${ingressControllerName}policy'
@@ -64,7 +63,7 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
       {
         name: 'frontendPort'
         properties: {
-          port: frontendPort
+          port: 80
         }
       }
     ]
@@ -74,9 +73,23 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
         properties: {
           backendAddresses: [
             {
-              ipAddress: backendIP
+              fqdn: backendFQDN
             }
           ]
+        }
+      }
+    ]
+    probes: [
+      {
+        name: 'frontend-probe'
+        properties: {
+          protocol: 'Https'
+          path: '/tiles/get_trips'
+          pickHostNameFromBackendHttpSettings: true
+          interval: 30
+          timeout: 30
+          unhealthyThreshold: 2
+          port: 443
         }
       }
     ]
@@ -84,10 +97,14 @@ resource ingressController 'Microsoft.Network/applicationGateways@2024-05-01' = 
       {
         name: 'backendHttpSettings'
         properties: {
-          port: frontendPort
-          protocol: 'Http'
+          port: 443
+          protocol: 'Https'
+          hostName: backendFQDN
           cookieBasedAffinity: 'Disabled'
           requestTimeout: 20
+          probe: {
+            id: resourceId('Microsoft.Network/applicationGateways/probes', ingressControllerName, 'frontend-probe')
+          }
         }
       }
     ]

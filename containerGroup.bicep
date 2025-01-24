@@ -115,6 +115,8 @@ resource frontendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
+output frontendFQDN string = frontendContainerApp.properties.configuration.ingress.fqdn
+
 // Backend Container App
 resource backendContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: backendContainerName
